@@ -1,0 +1,132 @@
+---
+title: "SARIMA Utilities"
+author: "Evan L. Ray"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SARIMA Utilities}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette demonstrates the functionality provided by the sarima_utils
+package using influenza data available from the cdcfluview package.  The goal of
+this package is to provide a set of functions for estimating and generating
+predictions from a SARIMA model for approximately seasonal infectious disease
+time series data that comes as close as possible to working "out of the box"
+with minimal adjustments required.
+
+## Dengue Fever Data
+
+We will work with the `san_juan_dengue` data provided in this package.  Note
+that these data are the "Training Data" available for San Juan, Puerto Rico from
+NOAA here: http://dengueforecasting.noaa.gov/
+
+```{r}
+library(sarimautils)
+library(dplyr)
+library(ggplot2)
+
+ggplot(data = san_juan_dengue,
+    mapping = aes(x = week_start_date, y = total_cases)) +
+  geom_line()
+```
+
+Let's fit models using the data up through the 2007/2008 season and make
+predictions for the 2008/2009 season.
+
+## SARIMA Estimation
+
+Let's fit a few variations on models using different transformations, with and
+without an initial seasonal differencing.  Cite Hyndman, who recommends a
+preliminary seasonal differencing somewhere...
+
+Note that stationary = TRUE for auto.arima forces all differencing = 0 because
+resulting model is non-stationary if differencing is used.
+
+```{r}
+library(sarimautils)
+train_indices <- san_juan_dengue$season %in% paste0(1990:2004, "/", 1991:2005)
+
+sarima_fit_bc_transform <- fit_sarima(
+  y = san_juan_dengue$total_cases[train_indices],
+  ts_frequency = 52,
+  transformation = "box-cox",
+  seasonal_difference = TRUE)
+
+sarima_fit_log_transform <- fit_sarima(
+  y = san_juan_dengue$total_cases[train_indices] + 1, # there are some observations of 0 cases
+  ts_frequency = 52,
+  transformation = "log",
+  seasonal_difference = TRUE)
+
+sarima_fit_no_transform <- fit_sarima(
+  y = san_juan_dengue$total_cases[train_indices],
+  ts_frequency = 52,
+  transformation = "none",
+  seasonal_difference = TRUE)
+```
+
+## SARIMA Prediction
+
+```{r}
+library(sarimautils)
+train_indices <- san_juan_dengue$season %in% paste0(1990:2004, "/", 1991:2005)
+
+sarima_fit_bc_transform <- fit_sarima(
+  y = san_juan_dengue$total_cases[train_indices],
+  ts_frequency = 52,
+  transformation = "box-cox",
+  seasonal_difference = TRUE)
+
+set.seed(1)
+
+eval_indices <- san_juan_dengue$season %in% paste0(1990:2005, "/", 1991:2006)
+
+#debug(sample_predictive_trajectories_arima_wrapper)
+
+sampled_trajectories_bc_transform <-
+  sample_predictive_trajectories_arima_wrapper(
+    sarima_fit = sarima_fit_bc_transform,
+    newdata = san_juan_dengue$total_cases[eval_indices],
+    h = 52,
+    npaths = 1000
+  )
+
+plot_indices <- san_juan_dengue$season %in% paste0(2003:2006, "/", 2004:2007)
+
+preds_df <- san_juan_dengue %>%
+  filter(season == "2006/2007") %>%
+  mutate(
+    pred_total_cases = apply(sampled_trajectories_bc_transform, 2, mean),
+    pred_95_lb = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.025),
+    pred_95_ub = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.975),
+    pred_80_lb = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.05),
+    pred_80_ub = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.95),
+    pred_50_lb = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.25),
+    pred_50_ub = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.75),
+  )
+
+ggplot() +
+  geom_ribbon(
+    mapping = aes(x = week_start_date, ymin = pred_95_lb, ymax = pred_95_ub),
+    fill = "cornflowerblue",
+    alpha = 0.2,
+    data = preds_df) +
+  geom_ribbon(
+    mapping = aes(x = week_start_date, ymin = pred_80_lb, ymax = pred_80_ub),
+    fill = "cornflowerblue",
+    alpha = 0.2,
+    data = preds_df) +
+  geom_ribbon(
+    mapping = aes(x = week_start_date, ymin = pred_50_lb, ymax = pred_50_ub),
+    fill = "cornflowerblue",
+    alpha = 0.2,
+    data = preds_df) +
+  geom_line(
+    mapping = aes(x = week_start_date, y = pred_total_cases),
+    color = "cornflowerblue",
+    data = preds_df) +
+  geom_line(mapping = aes(x = week_start_date, y = total_cases),
+    data = san_juan_dengue[plot_indices, , drop = FALSE])
+```

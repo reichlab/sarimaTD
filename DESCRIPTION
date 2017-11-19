@@ -1,0 +1,26 @@
+Package: sarimautils
+Title: SARIMA Model Utility Functions
+Version: 0.0.0.9000
+Authors@R: person("Evan", "Ray", , "eray@mtholyoke.edu", c("aut", "cre"))
+Description: A set of wrapper functions around the forecast package to simplify
+    estimation of and prediction from SARIMA models.  Estimation and prediction
+    routines are provided for a "default" sarima model specification that we
+    have found through experimentation that works fairly well for several
+    infectious disease data sets.  In this specification, incidence data are
+    first transformed to approximate normality, then seasonal differencing is
+    performed, and the transformed data are passed to forecast::auto.arima for
+    model selection and estimation.  A function to recursively simulate
+    "trajectories" of future incidence is provided, based on functionality
+    in the forecast package.
+Depends:
+    R (>= 3.0.2)
+Imports:
+    forecast,
+    car,
+    dplyr
+License: GPL-3
+LazyData: true
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 6.0.1
