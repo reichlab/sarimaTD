@@ -66,12 +66,30 @@ invert_initial_transform <- function(y, transformation, bc_params) {
   return(detransformed_y)
 }
 
+#' Invert a Box-Cox (with negatives allowed) transformation.  See car::bcnPower
+#' for the original transformation.
+#'
+#' @param b a univariate numeric vector.
+#' @param lambda exponent for Box-Cox transformation
+#' @param gamma offset for Box-Cox transformation
+#'
+#' @details Undoing the Box-Cox step is straightforward, but I could not find a
+#'   closed-form way to undo the second step (but I may just be missing it).
+#'   Currently, just using optim to minimize square difference from z and
+#'   transformed y, as a function of y.  There must be something faster?
+#'
+#' @return a transformed object of the same class as y
+#'
+#' @export
 invert_bcn_transform <- function(b, lambda, gamma) {
   ## Two steps: 1) undo box-cox 2) get y from z
-  warning("Function invert_bcn_transform is untested!!")
 
   ## 1) undo box-cox: straightforward
-  z <- (lambda * b + 1)^(1 / lambda)
+  if(abs(lambda) <= 1e-10) {
+    z <- exp(b)
+  } else {
+    z <- (lambda * b + 1)^(1 / lambda)
+  }
 
   ## 2) get y from z: I couldn't find an exact formula, doing it numerically...
   y <- sapply(z, function(z_i) {

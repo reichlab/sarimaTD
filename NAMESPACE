@@ -3,6 +3,7 @@
 export(do_initial_transform)
 export(do_seasonal_difference)
 export(fit_sarima)
+export(invert_bcn_transform)
 export(invert_initial_transform)
 export(invert_seasonal_difference)
 export(sample_predictive_trajectories_arima)
