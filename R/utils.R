@@ -143,20 +143,23 @@ do_seasonal_difference <- function(y, ts_frequency) {
 #'
 #' @export
 invert_seasonal_difference <- function(dy, y, ts_frequency) {
-  return(dy + y[length(y) + seq_along(dy) - ts_frequency])
+  return(ts(dy + y[length(y) + seq_along(dy) - ts_frequency],
+    freq = ts_frequency))
 }
 
-## deal with internal missing or infinite values in y that can
-## result in simulated trajectories of all NAs if the model has a moving
-## average component.  Here we do this by linear interpolation.
-##
-## Another (better?) solution would be to write a version of stats::filter
-## that does the "right thing" with NAs if filter coefficients are 0 and then
-## use that function in forecast:::myarima.sim
+#' Remove leading values that are infinite or missing, and replace all internal
+#' sequences of infinite or missing values by linearly interpolating between
+#' the surrounding observed (finite) values.  Used in prediction methods
+#'
+#' @param y a univariate time series or numeric vector
+#' 
+#' @return a vector of the same class as y
+#'
+#' @export
 interpolate_and_clean_missing <- function(y) {
   if(any(is.na(y) | is.infinite(y)) && !is.na(tail(y, 1))) {
     ## drop leading NAs
-    if(is.na(y[1] | is.infinite(y[1]))) {
+    if(is.na(y[1]) | is.infinite(y[1])) {
       num_leading_nas <- rle(is.na(y) | is.infinite(y))$lengths[1]
       y <- y[- seq_len(num_leading_nas)]
     }

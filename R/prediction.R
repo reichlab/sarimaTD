@@ -84,6 +84,13 @@ sample_predictive_trajectories_arima_wrapper <- function(
   ## Drop leading missing values, fill in internal missing values via linear
   ## interpolation.  This is necessary to ensure non-missing predictions if the
   ## sarima model has a moving average component.
+  ## deal with internal missing or infinite values in y that can
+  ## result in simulated trajectories of all NAs if the model has a moving
+  ## average component.  Here we do this by linear interpolation.
+  ##
+  ## Another (better?) solution would be to write a version of stats::filter
+  ## that does the "right thing" with NAs if filter coefficients are 0 and then
+  ## use that function in forecast:::myarima.sim
   interpolated_y <- interpolate_and_clean_missing(differenced_y)
 
   ## Update fit with transformed, differenced, and interpolated data
