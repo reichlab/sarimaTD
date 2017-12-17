@@ -1,5 +1,5 @@
-Package: sarimautils
-Title: SARIMA Model Utility Functions
+Package: sarimaTD
+Title: SARIMA Models with Transformations and Seasonal Differencing
 Version: 0.0.0.9000
 Authors@R: person("Evan", "Ray", , "eray@mtholyoke.edu", c("aut", "cre"))
 Description: A set of wrapper functions around the forecast package to simplify

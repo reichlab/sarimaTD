@@ -85,6 +85,8 @@ fit_sarima <- function(
   if(identical(transformation, "box-cox")) {
     sarima_fit$sarima_utils_est_bc_params <- est_bc_params
   }
+  
+  class(sarima_fit) <- c("sarimaTD", class(sarima_fit))
 
   return(sarima_fit)
 }

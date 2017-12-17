@@ -1,4 +1,4 @@
-library(sarimautils)
+library(sarimaTD)
 
 context("initial transform")
 

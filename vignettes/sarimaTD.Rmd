@@ -1,5 +1,5 @@
 ---
-title: "SARIMA Utilities"
+title: "SARIMA Models with Transformations and Seasonal Differencing"
 author: "Evan L. Ray"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette demonstrates the functionality provided by the sarima_utils
+This vignette demonstrates the functionality provided by the `sarimaTD`
 package using influenza data available from the cdcfluview package.  The goal of
 this package is to provide a set of functions for estimating and generating
 predictions from a SARIMA model for approximately seasonal infectious disease
@@ -23,7 +23,7 @@ that these data are the "Training Data" available for San Juan, Puerto Rico from
 NOAA here: http://dengueforecasting.noaa.gov/
 
 ```{r}
-library(sarimautils)
+library(sarimaTD)
 library(dplyr)
 library(ggplot2)
 
@@ -45,7 +45,6 @@ Note that stationary = TRUE for auto.arima forces all differencing = 0 because
 resulting model is non-stationary if differencing is used.
 
 ```{r}
-library(sarimautils)
 train_indices <- san_juan_dengue$season %in% paste0(1990:2004, "/", 1991:2005)
 
 sarima_fit_bc_transform <- fit_sarima(
@@ -54,43 +53,31 @@ sarima_fit_bc_transform <- fit_sarima(
   transformation = "box-cox",
   seasonal_difference = TRUE)
 
-sarima_fit_log_transform <- fit_sarima(
-  y = san_juan_dengue$total_cases[train_indices] + 1, # there are some observations of 0 cases
-  ts_frequency = 52,
-  transformation = "log",
-  seasonal_difference = TRUE)
+#sarima_fit_log_transform <- fit_sarima(
+#  y = san_juan_dengue$total_cases[train_indices] + 1, # there are some observations of 0 cases
+#  ts_frequency = 52,
+#  transformation = "log",
+#  seasonal_difference = TRUE)
 
-sarima_fit_no_transform <- fit_sarima(
-  y = san_juan_dengue$total_cases[train_indices],
-  ts_frequency = 52,
-  transformation = "none",
-  seasonal_difference = TRUE)
+#sarima_fit_no_transform <- fit_sarima(
+#  y = san_juan_dengue$total_cases[train_indices],
+#  ts_frequency = 52,
+#  transformation = "none",
+#  seasonal_difference = TRUE)
 ```
 
 ## SARIMA Prediction
 
 ```{r}
-library(sarimautils)
-train_indices <- san_juan_dengue$season %in% paste0(1990:2004, "/", 1991:2005)
-
-sarima_fit_bc_transform <- fit_sarima(
-  y = san_juan_dengue$total_cases[train_indices],
-  ts_frequency = 52,
-  transformation = "box-cox",
-  seasonal_difference = TRUE)
-
-set.seed(1)
-
 eval_indices <- san_juan_dengue$season %in% paste0(1990:2005, "/", 1991:2006)
 
-#debug(sample_predictive_trajectories_arima_wrapper)
-
 sampled_trajectories_bc_transform <-
-  sample_predictive_trajectories_arima_wrapper(
-    sarima_fit = sarima_fit_bc_transform,
+  simulate(
+    object = sarima_fit_bc_transform,
+    nsim = 1000,
+    seed = 1,
     newdata = san_juan_dengue$total_cases[eval_indices],
-    h = 52,
-    npaths = 1000
+    h = 52
   )
 
 plot_indices <- san_juan_dengue$season %in% paste0(2003:2006, "/", 2004:2007)

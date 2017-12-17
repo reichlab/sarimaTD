@@ -9,27 +9,25 @@
 #'
 #' @param object an Arima fit object (with class "Arima")
 #' @param h number of time steps forwards to simulate
-#' @param npaths number of sample trajectories to simulate
+#' @param nsim number of sample trajectories to simulate
 #'
-#' @return an npaths by h matrix with simulated values
-#'
-#' @export
+#' @return an nsim by h matrix with simulated values
 sample_predictive_trajectories_arima <- function(
   object,
   h = ifelse(object$arma[5] > 1, 2 * object$arma[5], 10),
   bootstrap = FALSE,
-  npaths = 1000,
+  nsim = 1000,
   ...) {
-    sim <- matrix(NA, nrow = npaths, ncol = h)
+    sim <- matrix(NA, nrow = nsim, ncol = h)
 
-    for (i in 1:npaths) {
+    for (i in 1:nsim) {
         try(sim[i, ] <- forecast:::simulate.Arima(object, nsim = h), silent = TRUE)
     }
 
     return(sim)
 }
 
-#' A wrapper around sample_predictive_trajectories_arima
+#' Simulate predictive trajectories from a SARIMA model with class sarima_td
 #'
 #' This function does a few things worth noting.  It linearly interpolates
 #' missing values on the interior of the time series, which is necessary for
@@ -37,33 +35,46 @@ sample_predictive_trajectories_arima <- function(
 #' transformations and possible seasonal differencing that may have been done
 #' in the fit_sarima function.
 #'
-#' @param sarima_fit a sarima fit, probably as returned by fit_sarima
+#' @param object a sarima fit of class "sarima_td", as returned by fit_sarima
+#' @param nsim number of sample trajectories to simulate
+#' @param seed either `NULL` or an integer that will be used in a call to
+#'   `set.seed` before simulating the response vectors.  If set, the value is
+#'   saved as the "seed" attribute of the returned value.  The default, `Null`,
+#'   will not change the random generator state, and return `.Random.seed`
+#'   as the "seed" attribute
+#' @param newdata new data to simulate forward from
 #' @param h number of time steps forwards to simulate
-#' @param npaths number of sample trajectories to simulate
 #'
-#' @return an npaths by h matrix with simulated values
+#' @return an nsim by h matrix with simulated values
 #'
 #' @export
-sample_predictive_trajectories_arima_wrapper <- function(
-  sarima_fit,
+simulate.sarimaTD <- function(
+  object,
+  nsim = 1,
+  seed = NULL,
   newdata,
-  h = 1,
-  npaths = 1
+  h = 1
 ) {
-  if(is.null(sarima_fit$sarima_utils_call)) {
+  if(is.null(seed)) {
+    seed <- .Random.seed
+  } else {
+    set.seed(seed)
+  }
+  
+  if(is.null(object$sarima_utils_call)) {
     transformation <- "none"
     seasonal_difference <- FALSE
   } else {
-    transformation <- sarima_fit$sarima_utils_call$transformation
+    transformation <- object$sarima_utils_call$transformation
     seasonal_difference <-
-      sarima_fit$sarima_utils_call$seasonal_difference
-    ts_frequency <- sarima_fit$arma[5]
+      object$sarima_utils_call$seasonal_difference
+    ts_frequency <- object$arma[5]
   }
 
   ## Update SARIMA fit object with transformed and seasonally differenced data
   ## Initial transformation, if necessary
   if(identical(transformation, "box-cox")) {
-    est_bc_params <- sarima_fit$sarima_utils_est_bc_params
+    est_bc_params <- object$sarima_utils_est_bc_params
   } else {
     est_bc_params <- NULL
   }
@@ -96,20 +107,20 @@ sample_predictive_trajectories_arima_wrapper <- function(
   ## Update fit with transformed, differenced, and interpolated data
   updated_sarima_fit <- forecast::Arima(
       interpolated_y,
-      model = sarima_fit)
+      model = object)
 
   ## Sample trajectories on the transformed and differenced scale
   raw_trajectory_samples <- sample_predictive_trajectories_arima(
       updated_sarima_fit,
       h = h,
-      npaths = npaths)
+      nsim = nsim)
 
   ## Sampled trajectories are of seasonally differenced transformed time series
   ## Get to trajectories for originally observed time series ("orig") by
   ## adding seasonal lag of incidence and inverting the transformation
   orig_trajectory_samples <- raw_trajectory_samples
   if(seasonal_difference) {
-    for(i in seq_len(npaths)) {
+    for(i in seq_len(nsim)) {
       orig_trajectory_samples[i, ] <-
         invert_seasonal_difference(
           dy = raw_trajectory_samples[i, ],
@@ -122,7 +133,7 @@ sample_predictive_trajectories_arima_wrapper <- function(
           bc_params = est_bc_params)
     }
   } else {
-    for(i in seq_len(npaths)) {
+    for(i in seq_len(nsim)) {
       orig_trajectory_samples[i, ] <-
         invert_initial_transform(
           y = raw_trajectory_samples[i, ],
@@ -131,5 +142,7 @@ sample_predictive_trajectories_arima_wrapper <- function(
     }
   }
 
+  attr(orig_trajectory_samples, "seed") <- seed
+  
   return(orig_trajectory_samples)
 }

@@ -5,17 +5,17 @@
 \title{Simulate predictive trajectories from an ARIMA model}
 \usage{
 sample_predictive_trajectories_arima(object, h = ifelse(object$arma[5] > 1, 2
-  * object$arma[5], 10), bootstrap = FALSE, npaths = 1000, ...)
+  * object$arma[5], 10), bootstrap = FALSE, nsim = 1000, ...)
 }
 \arguments{
 \item{object}{an Arima fit object (with class "Arima")}
 
 \item{h}{number of time steps forwards to simulate}
 
-\item{npaths}{number of sample trajectories to simulate}
+\item{nsim}{number of sample trajectories to simulate}
 }
 \value{
-an npaths by h matrix with simulated values
+an nsim by h matrix with simulated values
 }
 \description{
 This is directly taken from the forecast.Arima function from the forecast
