@@ -47,7 +47,17 @@ fit_sarima <- function(
 
   ## Initial transformation, if necessary
   if(identical(transformation, "box-cox")) {
-    est_bc_params <- car::powerTransform(y, family = "bcnPower")
+    ## this is a little ad hoc: get gamma from bcnPower family, but then
+    ## re-estimate lambda from bcPower family.  This ensures de-transformed
+    ## values will always be positive, while getting us a reasonable value of
+    ## gamma to use in case of zeros
+#    est_bc_params <- car::powerTransform(y, family = "bcnPower")
+#    gamma <- est_bc_params$gamma
+    gamma <- 0.5
+    est_bc_params <- car::powerTransform(y + gamma, family = "bcPower")
+    est_bc_params <- list(
+      lambda = est_bc_params$lambda,
+      gamma = gamma)
   }
   transformed_y <- do_initial_transform(
     y = y,

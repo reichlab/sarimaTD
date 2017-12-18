@@ -20,10 +20,13 @@ do_initial_transform <- function(y, transformation, bc_params) {
     if(missing(bc_params)) {
       stop("bc_params must be provided if transformation is 'box-cox'")
     }
-    transformed_y <- car::bcnPower(
-      U = y,
-      lambda = bc_params$lambda,
-      gamma = bc_params$gamma)
+#    transformed_y <- car::bcnPower(
+#      U = y,
+#      lambda = bc_params$lambda,
+#      gamma = bc_params$gamma)
+    transformed_y <- car::bcPower(
+      U = y + bc_params$gamma,
+      lambda = bc_params$lambda)
   } else if(identical(transformation, "none") ||
       identical(transformation, "forecast-box-cox")) {
     transformed_y <- y
@@ -53,7 +56,10 @@ invert_initial_transform <- function(y, transformation, bc_params) {
     if(missing(bc_params)) {
       stop("bc_params must be provided if transformation is 'box-cox'")
     }
-    detransformed_y <- invert_bcn_transform(b = y,
+#    detransformed_y <- invert_bcn_transform(b = y,
+#      lambda = bc_params$lambda,
+#      gamma = bc_params$gamma)
+    detransformed_y <- invert_bc_transform(b = y,
       lambda = bc_params$lambda,
       gamma = bc_params$gamma)
   } else if(identical(transformation, "none") ||
@@ -104,6 +110,32 @@ invert_bcn_transform <- function(b, lambda, gamma) {
     })
 
   return(y)
+}
+
+#' Invert a Box-Cox transformation.  See car::bcPower for the original
+#' transformation.
+#'
+#' @param b a univariate numeric vector.
+#' @param lambda exponent for Box-Cox transformation
+#' @param gamma offset for Box-Cox transformation
+#'
+#' @details Undoing the Box-Cox step is straightforward, then subtract gamma.
+#'
+#' @return a transformed object of the same class as y
+#'
+#' @export
+invert_bc_transform <- function(b, lambda, gamma) {
+  ## Two steps: 1) undo box-cox 2) get y from z
+
+  ## 1) undo box-cox: straightforward
+  if(abs(lambda) <= 1e-10) {
+    z <- exp(b)
+  } else {
+    z <- (lambda * b + 1)^(1 / lambda)
+  }
+
+  ## 2) Subtract gamma
+  return(z - gamma)
 }
 
 #' Do first-order seasonal differencing (go from original time series values to
