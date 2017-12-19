@@ -13,8 +13,8 @@ invert_initial_transform(y, transformation, bc_params)
 "box-cox", "log", "forecast-box-cox", or "none".}
 
 \item{bc_params}{(required if transformation is "box-cox").  Parameters for
-the Box-Cox transformation.  This should be the result of a call to
-car::powerTransform(y, family = "bcnPower")}
+the Box-Cox transformation.  bc_params$lambda should be the result of a
+call to car::powerTransform(y + bc_params$gamma, family = "bcPower")}
 }
 \value{
 a transformed object of the same class as y

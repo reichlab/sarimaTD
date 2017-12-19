@@ -6,8 +6,8 @@
 #' @param transformation character specifying transformation type:
 #'   "box-cox", "log", "forecast-box-cox", or "none".
 #' @param bc_params (required if transformation is "box-cox").  Parameters for
-#'   the Box-Cox transformation.  This should be the result of a call to
-#'   car::powerTransform(y, family = "bcnPower")
+#'   the Box-Cox transformation.  bc_params$lambda should be the result of a
+#'   call to car::powerTransform(y + bc_params$gamma, family = "bcPower")
 #'
 #' @return a transformed object of the same class as y
 #'
@@ -20,10 +20,6 @@ do_initial_transform <- function(y, transformation, bc_params) {
     if(missing(bc_params)) {
       stop("bc_params must be provided if transformation is 'box-cox'")
     }
-#    transformed_y <- car::bcnPower(
-#      U = y,
-#      lambda = bc_params$lambda,
-#      gamma = bc_params$gamma)
     transformed_y <- car::bcPower(
       U = y + bc_params$gamma,
       lambda = bc_params$lambda)
@@ -43,8 +39,8 @@ do_initial_transform <- function(y, transformation, bc_params) {
 #' @param transformation character specifying transformation type:
 #'   "box-cox", "log", "forecast-box-cox", or "none".
 #' @param bc_params (required if transformation is "box-cox").  Parameters for
-#'   the Box-Cox transformation.  This should be the result of a call to
-#'   car::powerTransform(y, family = "bcnPower")
+#'   the Box-Cox transformation.  bc_params$lambda should be the result of a
+#'   call to car::powerTransform(y + bc_params$gamma, family = "bcPower")
 #'
 #' @return a transformed object of the same class as y
 #'
@@ -56,9 +52,6 @@ invert_initial_transform <- function(y, transformation, bc_params) {
     if(missing(bc_params)) {
       stop("bc_params must be provided if transformation is 'box-cox'")
     }
-#    detransformed_y <- invert_bcn_transform(b = y,
-#      lambda = bc_params$lambda,
-#      gamma = bc_params$gamma)
     detransformed_y <- invert_bc_transform(b = y,
       lambda = bc_params$lambda,
       gamma = bc_params$gamma)
@@ -72,46 +65,6 @@ invert_initial_transform <- function(y, transformation, bc_params) {
   return(detransformed_y)
 }
 
-#' Invert a Box-Cox (with negatives allowed) transformation.  See car::bcnPower
-#' for the original transformation.
-#'
-#' @param b a univariate numeric vector.
-#' @param lambda exponent for Box-Cox transformation
-#' @param gamma offset for Box-Cox transformation
-#'
-#' @details Undoing the Box-Cox step is straightforward, but I could not find a
-#'   closed-form way to undo the second step (but I may just be missing it).
-#'   Currently, just using optim to minimize square difference from z and
-#'   transformed y, as a function of y.  There must be something faster?
-#'
-#' @return a transformed object of the same class as y
-#'
-#' @export
-invert_bcn_transform <- function(b, lambda, gamma) {
-  ## Two steps: 1) undo box-cox 2) get y from z
-
-  ## 1) undo box-cox: straightforward
-  if(abs(lambda) <= 1e-10) {
-    z <- exp(b)
-  } else {
-    z <- (lambda * b + 1)^(1 / lambda)
-  }
-
-  ## 2) get y from z: I couldn't find an exact formula, doing it numerically...
-  y <- sapply(z, function(z_i) {
-      temp <- optim(
-        par = 0, # not a good default, could do better?  plot 0.5 * (y_i + (y_i^2 + gamma^2)^(0.5))
-        fn = function(y_i) {
-          (z_i - 0.5 * (y_i + (y_i^2 + gamma^2)^(0.5)))^2
-        },
-        method = "L-BFGS-B"
-      )
-      return(temp$par)
-    })
-
-  return(y)
-}
-
 #' Invert a Box-Cox transformation.  See car::bcPower for the original
 #' transformation.
 #'
@@ -119,15 +72,13 @@ invert_bcn_transform <- function(b, lambda, gamma) {
 #' @param lambda exponent for Box-Cox transformation
 #' @param gamma offset for Box-Cox transformation
 #'
-#' @details Undoing the Box-Cox step is straightforward, then subtract gamma.
-#'
 #' @return a transformed object of the same class as y
 #'
 #' @export
 invert_bc_transform <- function(b, lambda, gamma) {
-  ## Two steps: 1) undo box-cox 2) get y from z
+  ## Two steps: 1) undo box-cox 2) subtract offset gamma
 
-  ## 1) undo box-cox: straightforward
+  ## 1) undo box-cox
   if(abs(lambda) <= 1e-10) {
     z <- exp(b)
   } else {

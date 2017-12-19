@@ -47,12 +47,10 @@ fit_sarima <- function(
 
   ## Initial transformation, if necessary
   if(identical(transformation, "box-cox")) {
-    ## this is a little ad hoc: get gamma from bcnPower family, but then
-    ## re-estimate lambda from bcPower family.  This ensures de-transformed
-    ## values will always be positive, while getting us a reasonable value of
-    ## gamma to use in case of zeros
-#    est_bc_params <- car::powerTransform(y, family = "bcnPower")
-#    gamma <- est_bc_params$gamma
+    ## Fix offset parameter gamma to 0.5.  This allows us to use the Box-Cox
+    ## transform (which requires positive inputs), and also ensures that the
+    ## de-transformed values will always be at least -0.5, so that they round up
+    ## to non-negative values.
     gamma <- 0.5
     est_bc_params <- car::powerTransform(y + gamma, family = "bcPower")
     est_bc_params <- list(
