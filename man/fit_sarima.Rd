@@ -19,9 +19,9 @@ of class "ts".  See the help for stats::ts for more.}
 \item{seasonal_difference}{boolean; take a seasonal difference before passing
 to auto.arima?}
 
-\item{auto.arima_d}{order of first differencing argument to auto.arima.}
+\item{d}{order of first differencing argument to auto.arima.}
 
-\item{auto.arima_D}{order of seasonal differencing argument to auto.arima.}
+\item{D}{order of seasonal differencing argument to auto.arima.}
 }
 \value{
 a SARIMA model fit

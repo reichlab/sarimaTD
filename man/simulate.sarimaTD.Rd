@@ -4,7 +4,8 @@
 \alias{simulate.sarimaTD}
 \title{Simulate predictive trajectories from a SARIMA model with class sarima_td}
 \usage{
-\method{simulate}{sarimaTD}(object, nsim = 1, seed = NULL, newdata, h = 1)
+\method{simulate}{sarimaTD}(object, nsim = 1, seed = NULL, newdata,
+  h = 1)
 }
 \arguments{
 \item{object}{a sarima fit of class "sarima_td", as returned by fit_sarima}

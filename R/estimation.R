@@ -9,8 +9,8 @@
 #'   "box-cox", "log", "forecast-box-cox", or "none".  See details for more.
 #' @param seasonal_difference boolean; take a seasonal difference before passing
 #'   to auto.arima?
-#' @param auto.arima_d order of first differencing argument to auto.arima.
-#' @param auto.arima_D order of seasonal differencing argument to auto.arima.
+#' @param d order of first differencing argument to auto.arima.
+#' @param D order of seasonal differencing argument to auto.arima.
 #'
 #' @return a SARIMA model fit
 #'

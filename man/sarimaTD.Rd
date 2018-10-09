@@ -4,7 +4,6 @@
 \name{sarimaTD}
 \alias{sarimaTD}
 \alias{sarimaTD-package}
-\alias{sarimaTD-package}
 \title{sarimaTD - SARIMA Models with Transformations and Seasonal Differencing}
 \description{
 SARIMA Models with Transformations and Seasonal Differencing
