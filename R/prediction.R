@@ -42,7 +42,7 @@ sample_predictive_trajectories_arima <- function(
 #'   saved as the "seed" attribute of the returned value.  The default, `Null`,
 #'   will not change the random generator state, and return `.Random.seed`
 #'   as the "seed" attribute
-#' @param newdata new data to simulate forward from
+#' @param newdata numeric vector of new data to simulate forward from
 #' @param h number of time steps forwards to simulate
 #'
 #' @return an nsim by h matrix with simulated values

@@ -36,7 +36,7 @@ This function is a wrapper around forecast::auto.arima, providing
   transformations to be helpful with a few infectious disease time series
   data sets.  Note that if any transformation was specified or the
   seasonal_difference argument was TRUE in the call to this function, only
-  prediction/forecast utilities provided by the sarima_utils package can be
+  prediction/forecast utilities provided by the sarimaTD package can be
   used!  We have found that using the default arguments for transformation,
   seasonal_difference, d, and D, yields good performance.
 }

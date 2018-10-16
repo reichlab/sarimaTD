@@ -18,7 +18,7 @@ saved as the "seed" attribute of the returned value.  The default, `Null`,
 will not change the random generator state, and return `.Random.seed`
 as the "seed" attribute}
 
-\item{newdata}{new data to simulate forward from}
+\item{newdata}{numeric vector of new data to simulate forward from}
 
 \item{h}{number of time steps forwards to simulate}
 }
