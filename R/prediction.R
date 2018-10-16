@@ -61,20 +61,20 @@ simulate.sarimaTD <- function(
     set.seed(seed)
   }
   
-  if(is.null(object$sarima_utils_call)) {
+  if(is.null(object$sarimaTD_call)) {
     transformation <- "none"
     seasonal_difference <- FALSE
   } else {
-    transformation <- object$sarima_utils_call$transformation
+    transformation <- object$sarimaTD_used_transformation
     seasonal_difference <-
-      object$sarima_utils_call$seasonal_difference
+      object$sarimaTD_used_seasonal_difference
     ts_frequency <- object$arma[5]
   }
 
   ## Update SARIMA fit object with transformed and seasonally differenced data
   ## Initial transformation, if necessary
   if(identical(transformation, "box-cox")) {
-    est_bc_params <- object$sarima_utils_est_bc_params
+    est_bc_params <- object$sarimaTD_est_bc_params
   } else {
     est_bc_params <- NULL
   }

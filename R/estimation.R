@@ -20,7 +20,7 @@
 #'   transformations to be helpful with a few infectious disease time series
 #'   data sets.  Note that if any transformation was specified or the
 #'   seasonal_difference argument was TRUE in the call to this function, only
-#'   prediction/forecast utilities provided by the sarima_utils package can be
+#'   prediction/forecast utilities provided by the sarimaTD package can be
 #'   used!  We have found that using the default arguments for transformation,
 #'   seasonal_difference, d, and D, yields good performance.
 #'
@@ -89,9 +89,12 @@ fit_sarima <- function(
       stationary = TRUE)
   }
 
-  sarima_fit$sarima_utils_call <- match.call()
+  sarima_fit$sarimaTD_call <- match.call()
+  for(param_name in c("y", "ts_frequency", "transformation", "seasonal_difference", "d", "D")) {
+    sarima_fit[[paste0("sarimaTD_used_", param_name)]] <- get(param_name)
+  }
   if(identical(transformation, "box-cox")) {
-    sarima_fit$sarima_utils_est_bc_params <- est_bc_params
+    sarima_fit$sarimaTD_est_bc_params <- est_bc_params
   }
   
   class(sarima_fit) <- c("sarimaTD", class(sarima_fit))
