@@ -1,0 +1,117 @@
+---
+title: "SARIMA Models with Transformations and Seasonal Differencing via ForecastFramework"
+author: "Evan L. Ray"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{sarimaTD ForecastFramework interface}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The ForecastFramework package specifies a standardized interface for forecasting
+methods.  The sarimaTD package provides an R6 class, `sarimaTD_FF`, which can
+be used with the ForecastFramework package.  This vignette demonstrates the use
+of `sarimaTD_FF`.
+
+## Dengue Fever Data
+
+We will work with the `san_juan_dengue` data provided in this package.  Note
+that these data are the "Training Data" available for San Juan, Puerto Rico from
+NOAA here: http://dengueforecasting.noaa.gov/
+
+```{r}
+library(sarimaTD)
+library(ForecastFramework)
+library(dplyr)
+library(ggplot2)
+
+ggplot(data = san_juan_dengue,
+        mapping = aes(x = week_start_date, y = total_cases)) +
+    geom_line()
+```
+
+Let's fit models using the data up through the 2007/2008 season and make
+predictions for the 2008/2009 season.
+
+## SARIMA Estimation
+
+```{r}
+# get a train/test split
+san_juan_dengue <- san_juan_dengue %>%
+    mutate(location = "San Juan, PR")
+train_seasons <- paste0(1990:2004, "/", 1991:2005)
+train_indices <- which(san_juan_dengue$season %in% train_seasons)
+train_data <- san_juan_dengue %>%
+    slice(train_indices)
+test_data <- san_juan_dengue %>%
+    slice(-train_indices)
+
+# get data into format for ForecastFramework model
+train_data_FF <- ObservationList$new(train_data)
+train_data_FF$formArray('location',
+    'week_start_date',
+    val = 'total_cases',
+    dimData = list(list('location'), list('week_start_date')))
+
+test_data_FF <- ObservationList$new(test_data)
+test_data_FF$formArray('location',
+    'week_start_date',
+    val = 'total_cases',
+    dimData = list(list('location'), list('week_start_date')))
+
+# define sarimaTD_FF object
+sarima_model <- sarimaTD_FF$new(
+    nsim = 1000,
+    frequency = 52,
+    transformation = "box-cox",
+    seasonal_difference = TRUE)
+
+# get the model fit to the training data
+sarima_model$fit(train_data_FF)
+```
+
+## SARIMA forecasts
+
+Now we generate some forecasts from the model and plot them.
+
+```{r}
+forecast_FF <- sarima_model$forecast(steps = 52)
+
+plot_indices <- san_juan_dengue$season %in% paste0(2003:2006, "/", 2004:2007)
+
+preds_df <- san_juan_dengue %>%
+    filter(season == "2006/2007") %>%
+    mutate(
+        pred_total_cases = as.vector(forecast_FF$median(na.rm=TRUE)$mat),
+        pred_95_lb = as.vector(forecast_FF$quantile(0.025,na.rm=TRUE)$mat),
+        pred_95_ub = as.vector(forecast_FF$quantile(0.975,na.rm=TRUE)$mat),
+        pred_80_lb = as.vector(forecast_FF$quantile(0.05,na.rm=TRUE)$mat),
+        pred_80_ub = as.vector(forecast_FF$quantile(0.95,na.rm=TRUE)$mat),
+        pred_50_lb = as.vector(forecast_FF$quantile(0.25,na.rm=TRUE)$mat),
+        pred_50_ub = as.vector(forecast_FF$quantile(0.75,na.rm=TRUE)$mat)
+    )
+
+ggplot() +
+    geom_ribbon(
+        mapping = aes(x = week_start_date, ymin = pred_95_lb, ymax = pred_95_ub),
+        fill = "cornflowerblue",
+        alpha = 0.2,
+        data = preds_df) +
+    geom_ribbon(
+        mapping = aes(x = week_start_date, ymin = pred_80_lb, ymax = pred_80_ub),
+        fill = "cornflowerblue",
+        alpha = 0.2,
+        data = preds_df) +
+    geom_ribbon(
+        mapping = aes(x = week_start_date, ymin = pred_50_lb, ymax = pred_50_ub),
+        fill = "cornflowerblue",
+        alpha = 0.2,
+        data = preds_df) +
+    geom_line(
+        mapping = aes(x = week_start_date, y = pred_total_cases),
+        color = "cornflowerblue",
+        data = preds_df) +
+    geom_line(mapping = aes(x = week_start_date, y = total_cases),
+        data = san_juan_dengue[plot_indices, , drop = FALSE])
+```

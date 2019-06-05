@@ -64,6 +64,7 @@ simulate.sarimaTD <- function(
   if(is.null(object$sarimaTD_call)) {
     transformation <- "none"
     seasonal_difference <- FALSE
+    ts_frequency <- object$arma[5]
   } else {
     transformation <- object$sarimaTD_used_transformation
     seasonal_difference <-
