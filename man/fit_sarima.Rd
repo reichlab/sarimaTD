@@ -4,7 +4,7 @@
 \alias{fit_sarima}
 \title{Estimate SARIMA model}
 \usage{
-fit_sarima(y, ts_frequency, transformation = "box-cox",
+fit_sarima(y, ts_frequency, transformation = "box-cox", bc_gamma = 0.5,
   seasonal_difference = TRUE, d = NA, D = NA)
 }
 \arguments{
@@ -15,6 +15,13 @@ of class "ts".  See the help for stats::ts for more.}
 
 \item{transformation}{character specifying transformation type:
 "box-cox", "log", "forecast-box-cox", or "none".  See details for more.}
+
+\item{bc_gamma}{numeric offset used in Box-Cox transformation; gamma is
+added to all observations before transforming.  Default value of 0.5
+allows us to use the Box-Cox transform (which requires positive inputs)
+in case of observations of 0, and also ensures that the de-transformed
+values will always be at least -0.5, so that they round up to non-negative
+values.}
 
 \item{seasonal_difference}{boolean; take a seasonal difference before passing
 to auto.arima?}
