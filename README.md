@@ -1,3 +1,6 @@
+[![DOI](https://zenodo.org/badge/111324162.svg)](https://zenodo.org/badge/latestdoi/111324162)
+
+
 # sarima-utils
 sarimautils R package: SARIMA Model Utility Functions
 
