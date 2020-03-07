@@ -17,6 +17,7 @@
 #'   to auto.arima?
 #' @param d order of first differencing argument to auto.arima.
 #' @param D order of seasonal differencing argument to auto.arima.
+#' @param ... arguments passed on to forecast::auto.arima
 #'
 #' @return a SARIMA model fit
 #'
@@ -38,7 +39,8 @@ fit_sarima <- function(
   bc_gamma = 0.5,
   seasonal_difference = TRUE,
   d = NA,
-  D = NA) {
+  D = NA,
+  ...) {
   ## Validate arguments
   if(!(is.numeric(y) || is.ts(y))) {
     stop("The argument y must be a numeric vector or object of class 'ts'.")
@@ -82,13 +84,17 @@ fit_sarima <- function(
       d = d,
       D = D,
       stationary = TRUE,
-      lambda = lambda)
+      lambda = lambda,
+      optim.method = "L-BFGS-B",
+      ...)
   } else {
     ## box-cox or log transformation (already done) or no transformation
     sarima_fit <- forecast::auto.arima(differenced_y,
       d = d,
       D = D,
-      stationary = TRUE)
+      stationary = TRUE,
+      optim.method = "L-BFGS-B",
+      ...)
   }
 
   sarima_fit$sarimaTD_call <- match.call()

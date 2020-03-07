@@ -18,10 +18,10 @@ sample_predictive_trajectories_arima <- function(
   bootstrap = FALSE,
   nsim = 1000,
   ...) {
-    sim <- matrix(NA, nrow = nsim, ncol = h)
+    sim <- matrix(NA_real_, nrow = nsim, ncol = h)
 
     for (i in 1:nsim) {
-        try(sim[i, ] <- forecast:::simulate.Arima(object, nsim = h), silent = TRUE)
+        try(sim[i, ] <- sarimaTD:::simulate.Arima(object, nsim = h), silent = TRUE)
     }
 
     return(sim)

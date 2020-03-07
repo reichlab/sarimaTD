@@ -5,7 +5,7 @@
 \title{Estimate SARIMA model}
 \usage{
 fit_sarima(y, ts_frequency, transformation = "box-cox", bc_gamma = 0.5,
-  seasonal_difference = TRUE, d = NA, D = NA)
+  seasonal_difference = TRUE, d = NA, D = NA, ...)
 }
 \arguments{
 \item{y}{a univariate time series or numeric vector.}
@@ -29,6 +29,8 @@ to auto.arima?}
 \item{d}{order of first differencing argument to auto.arima.}
 
 \item{D}{order of seasonal differencing argument to auto.arima.}
+
+\item{...}{arguments passed on to forecast::auto.arima}
 }
 \value{
 a SARIMA model fit
