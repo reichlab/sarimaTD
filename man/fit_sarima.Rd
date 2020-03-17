@@ -4,8 +4,16 @@
 \alias{fit_sarima}
 \title{Estimate SARIMA model}
 \usage{
-fit_sarima(y, ts_frequency, transformation = "box-cox", bc_gamma = 0.5,
-  seasonal_difference = TRUE, d = NA, D = NA, ...)
+fit_sarima(
+  y,
+  ts_frequency,
+  transformation = "box-cox",
+  bc_gamma = 0.5,
+  seasonal_difference = TRUE,
+  d = NA,
+  D = NA,
+  ...
+)
 }
 \arguments{
 \item{y}{a univariate time series or numeric vector.}

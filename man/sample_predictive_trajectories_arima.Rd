@@ -4,8 +4,13 @@
 \alias{sample_predictive_trajectories_arima}
 \title{Simulate predictive trajectories from an ARIMA model}
 \usage{
-sample_predictive_trajectories_arima(object, h = ifelse(object$arma[5] >
-  1, 2 * object$arma[5], 10), bootstrap = FALSE, nsim = 1000, ...)
+sample_predictive_trajectories_arima(
+  object,
+  h = ifelse(object$arma[5] > 1, 2 * object$arma[5], 10),
+  bootstrap = FALSE,
+  nsim = 1000,
+  ...
+)
 }
 \arguments{
 \item{object}{an Arima fit object (with class "Arima")}

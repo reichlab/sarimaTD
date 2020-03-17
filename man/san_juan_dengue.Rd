@@ -4,8 +4,10 @@
 \name{san_juan_dengue}
 \alias{san_juan_dengue}
 \title{Dengue fever incidence in San Juan, Puerto Rico, 1990/1991 to 2008/2009.}
-\format{A data.frame with 988 observations on dengue fever incidence in
-  San Juan, Puerto Rico}
+\format{
+A data.frame with 988 observations on dengue fever incidence in
+  San Juan, Puerto Rico
+}
 \source{
 \url{http://dengueforecasting.noaa.gov/}
 }

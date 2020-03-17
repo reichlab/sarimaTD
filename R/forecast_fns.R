@@ -89,7 +89,7 @@ simulate.Arima <- function (object, nsim = length(object$x), seed = NULL, xreg =
     }
     flag.seasonal.diff <- FALSE
   }
-  x <- object$x <- getResponse(object)
+  x <- object$x <- forecast::getResponse(object)
   if (is.null(tsp(x))) {
     x <- ts(x, frequency = 1, start = 1)
   }
