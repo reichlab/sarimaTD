@@ -9,7 +9,8 @@ fit_sarima(
   ts_frequency,
   transformation = "box-cox",
   bc_gamma = 0.5,
-  seasonal_difference = TRUE,
+  sarimaTD_d = 0,
+  sarimaTD_D = 1,
   d = NA,
   D = NA,
   ...
@@ -31,8 +32,11 @@ in case of observations of 0, and also ensures that the de-transformed
 values will always be at least -0.5, so that they round up to non-negative
 values.}
 
-\item{seasonal_difference}{boolean; take a seasonal difference before passing
-to auto.arima?}
+\item{sarimaTD_d}{integer order of first differencing done before passing to
+auto.arima}
+
+\item{sarimaTD_D}{integer order of seasonal differencing done before passing
+to auto.arima}
 
 \item{d}{order of first differencing argument to auto.arima.}
 

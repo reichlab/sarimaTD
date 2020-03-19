@@ -51,19 +51,8 @@ sarima_fit_bc_transform <- fit_sarima(
   y = san_juan_dengue$total_cases[train_indices],
   ts_frequency = 52,
   transformation = "box-cox",
-  seasonal_difference = TRUE)
-
-#sarima_fit_log_transform <- fit_sarima(
-#  y = san_juan_dengue$total_cases[train_indices] + 1, # there are some observations of 0 cases
-#  ts_frequency = 52,
-#  transformation = "log",
-#  seasonal_difference = TRUE)
-
-#sarima_fit_no_transform <- fit_sarima(
-#  y = san_juan_dengue$total_cases[train_indices],
-#  ts_frequency = 52,
-#  transformation = "none",
-#  seasonal_difference = TRUE)
+  sarimaTD_d = 0,
+  sarimaTD_D = 1)
 ```
 
 ## SARIMA Prediction
@@ -91,7 +80,7 @@ preds_df <- san_juan_dengue %>%
     pred_80_lb = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.05),
     pred_80_ub = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.95),
     pred_50_lb = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.25),
-    pred_50_ub = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.75),
+    pred_50_ub = apply(sampled_trajectories_bc_transform, 2, quantile, probs = 0.75)
   )
 
 ggplot() +

@@ -89,45 +89,88 @@ invert_bc_transform <- function(b, lambda, gamma) {
   return(z - gamma)
 }
 
-#' Do first-order seasonal differencing (go from original time series values to
-#' seasonally differenced time series values).
+#' Do first-order and seasonal differencing (go from original time series
+#' to differenced time series).
 #'
 #' @param y a univariate time series or numeric vector.
-#' @param ts_frequency frequency of time series.  Must be provided if y is not
-#'   of class "ts".  See the help for stats::ts for more.
+#' @param d order of first differencing
+#' @param D order of seasonal differencing
+#' @param frequency frequency of time series.  Must be provided if y is not
+#'   of class "ts" and D > 0.  See the help for stats::ts for more.
 #'
-#' @return a seasonally differenced time series object (of class 'ts'),
+#' @return a differenced time series object (of class 'ts'),
 #'   padded with leading NAs.
 #'
 #' @export
-do_seasonal_difference <- function(y, ts_frequency) {
-  differenced_y <- ts(c(rep(NA, ts_frequency),
-    y[seq(from = ts_frequency + 1, to = length(y))] -
-      y[seq(from = 1, to = length(y) - ts_frequency)]),
-    frequency = ts_frequency)
-  return(differenced_y)
+do_difference <- function(y, d = 0, D = 0, frequency = 1) {
+  # first differencing
+  for(i in seq_len(d)) {
+    y <- ts(
+      c(NA,
+        y[seq(from = 1 + 1, to = length(y))] -
+          y[seq(from = 1, to = length(y) - 1)]),
+    frequency = frequency)
+  }
+
+  # seasonal differencing
+  if(D > 0 && frequency < 2) {
+    stop("It doesn't make sense to do seasonal differencing with a time series frequency of 1.")
+  }
+  for(i in seq_len(D)) {
+    y <- ts(
+      c(rep(NA, frequency),
+        y[seq(from = frequency + 1, to = length(y))] -
+          y[seq(from = 1, to = length(y) - frequency)]),
+      frequency = frequency)
+  }
+  
+  return(y)
 }
 
-#' Invert first-order seasonal differencing (go from seasonally differenced time
-#' series values to original time series values).
+#' Invert first-order and seasonal differencing (go from seasonally differenced
+#' time series to original time series).
 #'
-#' @param dy a first-order seasonally differenced univariate time series with
-#'   values like y_{t} - y_{t - ts_frequency}
+#' @param dy a first-order and/or seasonally differenced univariate time series
+#'   with values like y_{t} - y_{t - ts_frequency}
 #' @param y a univariate time series or numeric vector with values like
 #'   y_{t - ts_frequency}.
-#' @param ts_frequency frequency of time series.  Must be provided if y is not
-#'   of class "ts".  See the help for stats::ts for more.
+#' @param d order of first differencing
+#' @param D order of seasonal differencing
+#' @param frequency frequency of time series.  Must be provided if y is not
+#'   of class "ts" and D > 0.  See the help for stats::ts for more.
 #'
 #' @details y may have longer length than dy.  It is assumed that dy "starts"
-#'   one time index after y "ends": that is, if y is of length T then
-#'   dy[1] = y[T + 1] - y[T + 1 - ts_frequency]
+#'   one time index after y "ends": that is, if y is of length T, d = 0, and
+#'   D = 1 then dy[1] = y[T + 1] - y[T + 1 - ts_frequency]
 #'
 #' @return a time series object (of class 'ts')
 #'
 #' @export
-invert_seasonal_difference <- function(dy, y, ts_frequency) {
-  return(ts(dy + y[length(y) + seq_along(dy) - ts_frequency],
-    freq = ts_frequency))
+invert_difference <- function(dy, y, d, D, frequency) {
+  for(i in seq_len(d)) {
+    y_dm1 <- do_difference(y, d = d-i, D = D, frequency = frequency)
+    dy_full <- c(y_dm1, dy)
+    for(t in seq_len(length(dy))) {
+      dy_full[length(y_dm1) + t] <- dy_full[length(y_dm1) + t - 1] + dy_full[length(y_dm1) + t]
+    }
+    dy <- dy_full[length(y_dm1) + seq_along(dy)]
+  }
+
+  for(i in seq_len(D)) {
+    y_dm1 <- do_difference(y, d = 0, D = D-i, frequency = frequency)
+    dy_full <- c(y_dm1, dy)
+    for(t in seq_len(length(dy))) {
+      dy_full[length(y_dm1) + t] <- dy_full[length(y_dm1) + t - frequency] + dy_full[length(y_dm1) + t]
+    }
+    dy <- dy_full[length(y_dm1) + seq_along(dy)]
+  }
+  
+#  for(i in seq_len(D)) {
+#    y_dm1 <- do_difference(y, d = 0, D = D-i, frequency = frequency)
+#    dy <- dy + y_dm1[length(y_dm1) + seq_along(dy) - frequency]
+#  }
+  
+  return(ts(dy, frequency = frequency))
 }
 
 #' Remove leading values that are infinite or missing, and replace all internal

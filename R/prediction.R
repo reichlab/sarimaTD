@@ -3,8 +3,8 @@
 #' Simulate predictive trajectories from an ARIMA model
 #'
 #' This is directly taken from the forecast.Arima function from the forecast
-#' package, but it returns the simulated trajectories which were not returned in
-#' the original function definition.  This function calls
+#' package, but it returns the simulated trajectories which were not returned
+#' in the original function definition.  This function calls
 #' forecast:::simulate.Arima, which is NOT exported from the forecast package!!
 #'
 #' @param object an Arima fit object (with class "Arima")
@@ -63,12 +63,12 @@ simulate.sarimaTD <- function(
   
   if(is.null(object$sarimaTD_call)) {
     transformation <- "none"
-    seasonal_difference <- FALSE
+    sarimaTD_d <- sarimaTD_D <- 0
     ts_frequency <- object$arma[5]
   } else {
     transformation <- object$sarimaTD_used_transformation
-    seasonal_difference <-
-      object$sarimaTD_used_seasonal_difference
+    sarimaTD_d <- object$sarimaTD_used_sarimaTD_d
+    sarimaTD_D <- object$sarimaTD_used_sarimaTD_D
     ts_frequency <- object$arma[5]
   }
 
@@ -85,14 +85,9 @@ simulate.sarimaTD <- function(
     bc_params = est_bc_params)
 
   ## Initial seasonal differencing, if necessary
-  if(seasonal_difference) {
-    differenced_y <- do_seasonal_difference(
-      y = transformed_y,
-      ts_frequency = ts_frequency)
-  } else {
-    differenced_y <- ts(transformed_y, frequency = ts_frequency)
-  }
-
+  differenced_y <- do_difference(transformed_y, d = sarimaTD_d, D = sarimaTD_D,
+    frequency = ts_frequency)
+  
   ## Drop leading missing values, fill in internal missing values via linear
   ## interpolation.  This is necessary to ensure non-missing predictions if the
   ## sarima model has a moving average component.
@@ -120,27 +115,20 @@ simulate.sarimaTD <- function(
   ## Get to trajectories for originally observed time series ("orig") by
   ## adding seasonal lag of incidence and inverting the transformation
   orig_trajectory_samples <- raw_trajectory_samples
-  if(seasonal_difference) {
-    for(i in seq_len(nsim)) {
-      orig_trajectory_samples[i, ] <-
-        invert_seasonal_difference(
-          dy = raw_trajectory_samples[i, ],
-          y = transformed_y,
-          ts_frequency = ts_frequency)
-      orig_trajectory_samples[i, ] <-
-        invert_initial_transform(
-          y = orig_trajectory_samples[i, ],
-          transformation = transformation,
-          bc_params = est_bc_params)
-    }
-  } else {
-    for(i in seq_len(nsim)) {
-      orig_trajectory_samples[i, ] <-
-        invert_initial_transform(
-          y = raw_trajectory_samples[i, ],
-          transformation = transformation,
-          bc_params = est_bc_params)
-    }
+  for(i in seq_len(nsim)) {
+    orig_trajectory_samples[i, ] <-
+      invert_difference(
+        dy = raw_trajectory_samples[i, ],
+        y = transformed_y,
+        d = sarimaTD_d,
+        D = sarimaTD_D,
+        frequency = ts_frequency)
+    
+    orig_trajectory_samples[i, ] <-
+      invert_initial_transform(
+        y = orig_trajectory_samples[i, ],
+        transformation = transformation,
+        bc_params = est_bc_params)
   }
 
   attr(orig_trajectory_samples, "seed") <- seed

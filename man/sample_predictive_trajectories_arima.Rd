@@ -24,7 +24,7 @@ an nsim by h matrix with simulated values
 }
 \description{
 This is directly taken from the forecast.Arima function from the forecast
-package, but it returns the simulated trajectories which were not returned in
-the original function definition.  This function calls
+package, but it returns the simulated trajectories which were not returned
+in the original function definition.  This function calls
 forecast:::simulate.Arima, which is NOT exported from the forecast package!!
 }

@@ -14,13 +14,15 @@ test_that("predict.sarimaTD, variable used for specification of transform during
 	y <- rlnorm(104)
 	ts_frequency <- 52L
 	transformation <- "log"
-	seasonal_difference <- TRUE
+	sarimaTD_d <- 1
+	sarimaTD_D <- 1
 	
 	sarima_fit <- fit_sarima(
 	  y = y,
 	  ts_frequency = ts_frequency,
 	  transformation = transformation,
-	  seasonal_difference = seasonal_difference)
+	  sarimaTD_d = sarimaTD_d,
+	  sarimaTD_D = sarimaTD_D)
 	
 	simulate_result <- tryCatch(
   	sims <- simulate(

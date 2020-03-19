@@ -13,8 +13,10 @@
 #'   in case of observations of 0, and also ensures that the de-transformed
 #'   values will always be at least -0.5, so that they round up to non-negative
 #'   values.
-#' @param seasonal_difference boolean; take a seasonal difference before passing
-#'   to auto.arima?
+#' @param sarimaTD_d integer order of first differencing done before passing to
+#'   auto.arima
+#' @param sarimaTD_D integer order of seasonal differencing done before passing
+#'   to auto.arima
 #' @param d order of first differencing argument to auto.arima.
 #' @param D order of seasonal differencing argument to auto.arima.
 #' @param ... arguments passed on to forecast::auto.arima
@@ -37,7 +39,8 @@ fit_sarima <- function(
   ts_frequency,
   transformation = "box-cox",
   bc_gamma = 0.5,
-  seasonal_difference = TRUE,
+  sarimaTD_d = 0,
+  sarimaTD_D = 1,
   d = NA,
   D = NA,
   ...) {
@@ -66,15 +69,10 @@ fit_sarima <- function(
     transformation = transformation,
     bc_params = est_bc_params)
 
-  ## Initial seasonal differencing, if necessary
-  if(seasonal_difference) {
-    differenced_y <- do_seasonal_difference(
-      y = transformed_y,
-      ts_frequency = ts_frequency)
-  } else {
-    differenced_y <- ts(transformed_y, frequency = ts_frequency)
-  }
-
+  ## Initial differencing, if necessary
+  differenced_y <- do_difference(transformed_y, d = sarimaTD_d, D = sarimaTD_D,
+    frequency = ts_frequency)
+  
   ## Get SARIMA fit
   if(identical(transformation, "forecast-box-cox")) {
     ## box-cox transformation done by auto.arima
@@ -98,7 +96,8 @@ fit_sarima <- function(
   }
 
   sarima_fit$sarimaTD_call <- match.call()
-  for(param_name in c("y", "ts_frequency", "transformation", "seasonal_difference", "d", "D")) {
+  for(param_name in c("y", "ts_frequency", "transformation", "sarimaTD_d",
+                      "sarimaTD_D", "d", "D")) {
     sarima_fit[[paste0("sarimaTD_used_", param_name)]] <- get(param_name)
   }
   if(identical(transformation, "box-cox")) {
